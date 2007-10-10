@@ -2,7 +2,7 @@
 
 = Vendor IDs =
 
-Each vendor should have assigned its own vendor ID.
+Each vendor should have assigned its own vendor ID. If you wish to have one, ask [mailto:krezac@gmail.com Kamil Rezac] for one.
 
 [http://www.asciitable.com/ ASCII table]
 
