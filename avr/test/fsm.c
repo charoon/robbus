@@ -209,8 +209,10 @@ static void sendWrappedWithCheckSum(uint8_t data) {
 
 	if (data > FSM_PACKET_MAX_SPECIAL)
 		uartAddToTxBuffer(data);
-	else
+	else {
+		uartAddToTxBuffer(FSM_PACKET_SPECIAL);
 		uartAddToTxBuffer(data + FSM_PACKET_SPECIAL_SHIFT);
+	}
 
 	checkSumAdd(data);
 }
