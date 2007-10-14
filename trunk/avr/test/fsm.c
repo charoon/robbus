@@ -93,8 +93,17 @@ void fsmSetCommandHandler(uint8_t (*cmd_func)(uint8_t*, uint8_t)) {
 		commandFunction = emptyFunction;
 }
 
+
+
 //! process incoming byte
 void fsmProcessByte(uint8_t data) {
+
+	// checking start byte is outside the fsm (because of synchronizing)
+	if (data == FSM_PACKET_START) {
+		fsmState = FSM_WAIT_FOR_CONTROL;
+		checkSumInit(); // initialize checksum counter
+		return;
+	}
 
 	// handle special character
 	if (data == FSM_PACKET_SPECIAL) {	// special character received, set flag, do not change state
@@ -107,13 +116,6 @@ void fsmProcessByte(uint8_t data) {
 		data -= FSM_PACKET_SPECIAL_SHIFT;
 	}
 
-	// checking start byte is outside the fsm (because of synchronizing)
-	if (data == FSM_PACKET_START) {
-		fsmState = FSM_WAIT_FOR_CONTROL;
-		checkSumInit(); // initialize checksum counter
-		return;
-	}
-	
 	switch (fsmState) {	
 		case FSM_WAIT_FOR_CONTROL:
 			if (data & FSM_REPLY_MASK) {
