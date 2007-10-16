@@ -18,7 +18,7 @@ extern "C" {
 #endif
 
 //! initialize FSM
-void fsmInit(uint8_t (*cmd_func)(uint8_t*, uint8_t));
+void fsmInit(uint8_t lsb, uint8_t (*cmd_func)(uint8_t*, uint8_t));
 
 //! redirects command processing to a user function
 void fsmSetCommandHandler(uint8_t (*cmd_func)(uint8_t*, uint8_t));
