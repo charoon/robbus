@@ -12,11 +12,15 @@ def sendWrapped(ser,c, sum):
 		ser.write(c)
 	return sum+ord(c)
 
-def sendMessage(ser,address,data):
+def sendMessage(ser,alias,data,mask):
 	sum = 0;
-	ser.write("\x02")     #write packet start
-	for c in address:
-		sum = sendWrapped(ser,c,sum) 
+	if mask is None:
+		ser.write("\x02")     #write regular packet start
+	else:
+		ser.write("\x03")     #write group packet start
+	sum = sendWrapped(ser,alias,sum) 
+	if mask is not None:
+		sum = sendWrapped(ser,mask,sum) 	
 	sum = sendWrapped(ser,chr(len(data)),sum)
 	for c in data:
 		sum = sendWrapped(ser,c,sum)	
@@ -74,9 +78,9 @@ def parseReply(s):
 
 
 def main(argv = None):
-	if len(argv) < 2:
-		print "Usage: test.py address [data]"
-		print "Both address and data are read as hexa values if"
+	if len(argv) < 3:
+		print "Usage: test.py address data [mask]"
+		print "All address, data and mask are read as hexa values if"
 		print "prefixed with \\x (or \\\\x to avoid shell expansion)"
 		print "Example (bash): ./test.py KRT1 \\\\x0305"
 		return
@@ -90,17 +94,24 @@ def main(argv = None):
 	if len(address) != 1:
 		print "Address must have 1 byte"
 		return
-	data = None;
-	if len(argv) > 2:
-		if argv[2][0:2] == "\\x":
-			print "Decoding hex data"
-			data = argv[2][2:].decode("hex");
-		else:
-			data = argv[2];
+	if argv[2][0:2] == "\\x":
+		print "Decoding hex data"
+		data = argv[2][2:].decode("hex");
 	else:
-		data = ""
+		data = argv[2];
+	if len(argv) > 3:
+		if argv[3][0:2] == "\\x":
+			print "Decoding hex mask"
+			mask = argv[3][2:].decode("hex");
+		else:
+			mask = argv[3];
+		if len(mask) != 1:
+			print "Mask must have 1 byte"
+			return
+	else:
+		mask = None
 	print "Sending..."
-	sendMessage(ser,address,data)
+	sendMessage(ser,address,data,mask)
 	parseReply(readReply(ser))
 	ser.close()
 
