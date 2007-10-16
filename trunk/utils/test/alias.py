@@ -12,9 +12,9 @@ def sendWrapped(ser,c, sum):
 		ser.write(c)
 	return sum+ord(c)
 
-def sendMessage(ser,start,address,alias):
+def sendMessage(ser,address,alias):
 	sum = 0;
-	ser.write(start)     #write packet start
+	ser.write("\x01")     #write packet start
 	sum = sendWrapped(ser,alias,sum)
 	for c in address:
 		sum = sendWrapped(ser,c,sum) 
@@ -30,9 +30,9 @@ def readReply(ser):
 		print x, ord(x)
 	
 def main(argv = None):
-	if len(argv) != 4:
-		print "Usage: alias.py op address alias"
-		print "op is a (acquire) or r (release)"
+	if len(argv) < 2:
+		print "Usage: alias.py address [alias]"
+		print "Missing alias means release"
 		print "Both address and alias are read as hexa values if"
 		print "prefixed with \\x (or \\\\x to avoid shell expansion)"
 		print "Example (bash): ./alias.py KRETE1 \\\\x01"
@@ -40,34 +40,28 @@ def main(argv = None):
 	
 	ser = serial.Serial('/dev/robbus', 115200, timeout=1)
 	
-	start = "x"
-	if argv[1][0] == "a":
-		start = "\x01"
-	elif argv[1][0] == "r":
-		start = "\x03"
-	else:
-		print "op must be either \"a\" or \"r\""
-		return
-	if argv[2][0:2] == "\\x":
+	if argv[1][0:2] == "\\x":
 		print "Decoding hex address"
-		address = argv[2][2:].decode("hex");
+		address = argv[1][2:].decode("hex");
 	else:
-		address = argv[2];
+		address = argv[1];
 	if len(address) != 6:
 		print "Address must have 6 bytes"
 		return
 	
-	if argv[3][0:2] == "\\x":
-		print "Decoding hex alias"
-		alias = argv[3][2:].decode("hex");
-	else:
-		alias = argv[3];
-	if len(alias) != 1:
-		print "Alias must have 1 byte"
-		return
-	
+	if len(argv) == 3:	
+		if argv[2][0:2] == "\\x":
+			print "Decoding hex alias"
+			alias = argv[2][2:].decode("hex");
+		else:
+			alias = argv[2];
+		if len(alias) != 1:
+			print "Alias must have 1 byte"
+			return
+	else: # release
+		alias = "\x7f"	
 	print "Sending..."
-	sendMessage(ser,start,address,alias)
+	sendMessage(ser,address,alias)
 	readReply(ser)
 	ser.close()
 

@@ -18,15 +18,9 @@
 #define FSM_NO_ALIAS 0x00
 
 // packet start definitions
-#define FSM_ACQUIRE_PACKET 0x01
+#define FSM_ALIAS_PACKET 0x01
 #define FSM_REGULAR_PACKET 0x02
-#define FSM_RELEASE_PACKET 0x03
-
-enum ServiceStateEnum {
-	ACQUIRING = FSM_ACQUIRE_PACKET,
-	NONE = FSM_RELEASE_PACKET,
-	RELEASING = FSM_RELEASE_PACKET
-};
+#define FSM_GROUP_PACKET 0x03
 
 // message processing machine state
  enum FsmStateEnum  {
@@ -42,6 +36,10 @@ enum ServiceStateEnum {
 	FSM_WAIT_FOR_ADDR_BYTE_0,
 	FSM_WAIT_FOR_SERVICE_CHECKSUM,
 
+	// group stuff
+	FSM_WAIT_FOR_GROUP_ALIAS,
+	FSM_WAIT_FOR_GROUP_MASK,
+
 	// regular usage
 	FSM_WAIT_FOR_ALIAS,
 	FSM_WAIT_FOR_LENGTH,
@@ -54,7 +52,7 @@ enum ServiceStateEnum {
 #define FSM_SPECIAL_SHIFT 0x04
 
 // max character being prefixed
-#define FSM_SPECIAL_MAX FSM_RELEASE_PACKET
+#define FSM_SPECIAL_MAX FSM_GROUP_PACKET
 
 // value added to the address while composing the reply	
 #define FSM_REPLY_MASK 0x80
@@ -65,10 +63,10 @@ static volatile enum FsmStateEnum fsmState;
 static uint8_t volatile dataLength;
 static uint8_t volatile checkSum;
 static uint8_t volatile dataReceived;
-static volatile enum ServiceStateEnum serviceStatus;
 static uint8_t volatile deviceAlias;
 static uint8_t volatile receivedAlias;
 static uint8_t volatile robbusLSB;
+static uint8_t volatile groupMessage;
 
 typedef uint8_t (*uint8FuncPtrDataSize)(uint8_t*, uint8_t);
 volatile static uint8FuncPtrDataSize commandFunction;
@@ -127,23 +125,23 @@ static void sendWrappedWithCheckSum(uint8_t data) {
 void fsmProcessByte(uint8_t data) {
 
 	// alias assign packet
-	if (data == FSM_ACQUIRE_PACKET) {
-		serviceStatus = ACQUIRING;
+	if (data == FSM_ALIAS_PACKET) {
 		fsmState = FSM_WAIT_FOR_SERVICE_ALIAS;
 		checkSumInit(); // initialize checksum counter
 		return;
 	}
 
 	// alias assign packet
-	if (data == FSM_RELEASE_PACKET) {
-		serviceStatus = RELEASING;
-		fsmState = FSM_WAIT_FOR_SERVICE_ALIAS;
+	if (data == FSM_GROUP_PACKET) {
+		groupMessage = 1;
+		fsmState = FSM_WAIT_FOR_GROUP_ALIAS;
 		checkSumInit(); // initialize checksum counter
 		return;
 	}
 
 	// checking start byte is outside the fsm (because of synchronizing)
 	if (data == FSM_REGULAR_PACKET) {
+		groupMessage = 0;
 		fsmState = FSM_WAIT_FOR_ALIAS;
 		checkSumInit(); // initialize checksum counter
 		return;
@@ -223,14 +221,8 @@ void fsmProcessByte(uint8_t data) {
 		case FSM_WAIT_FOR_SERVICE_CHECKSUM:
 			
 			if (((uint8_t)(data + checkSum)) == 0) {
-				if (serviceStatus == ACQUIRING) {
-					deviceAlias = receivedAlias;
-					uartAddToTxBuffer(FSM_ACQUIRE_PACKET);
-				} else {
-					deviceAlias = FSM_NO_ALIAS;
-					uartAddToTxBuffer(FSM_RELEASE_PACKET);
-				}
-				// send reply
+				deviceAlias = receivedAlias;
+				uartAddToTxBuffer(FSM_ALIAS_PACKET);
 				checkSumInit();
 				uartAddToTxBuffer(receivedAlias | FSM_REPLY_MASK);
 				sendWrappedWithCheckSum(ROBBUS_ADDR_BYTE_5);
@@ -245,6 +237,26 @@ void fsmProcessByte(uint8_t data) {
 			fsmState = FSM_INITIAL_STATE;
 			break;
 
+		// group sequence	
+		case FSM_WAIT_FOR_GROUP_ALIAS:
+			if (data & FSM_REPLY_MASK) {
+				fsmState = FSM_INITIAL_STATE; // reply from someone, ignore rest of packet
+			} else {
+				receivedAlias = data;
+				checkSumAdd(data);
+				fsmState = FSM_WAIT_FOR_GROUP_MASK;
+			}
+			break;
+
+		case FSM_WAIT_FOR_GROUP_MASK:
+			if ((data & receivedAlias) != (data & deviceAlias)) {
+				fsmState = FSM_INITIAL_STATE; // reply from someone, ignore rest of packet
+			} else {
+				receivedAlias = data;
+				checkSumAdd(data);
+				fsmState = FSM_WAIT_FOR_LENGTH;
+			}
+			break;
 		
 		// regulsr sequence	
 		case FSM_WAIT_FOR_ALIAS:
@@ -305,21 +317,23 @@ void doCommand(void) {
 	// do action here
 	uint8_t replyDataSize = commandFunction(dataBuffer, dataReceived);
 	
-	// send reply
-	checkSumInit();
-	uartAddToTxBuffer(FSM_REGULAR_PACKET);
-	sendWrappedWithCheckSum(FSM_REPLY_MASK | deviceAlias);
-	sendWrappedWithCheckSum( replyDataSize );
+	// send reply if not group message
+	if (!groupMessage) {
+		checkSumInit();
+		uartAddToTxBuffer(FSM_REGULAR_PACKET);
+		sendWrappedWithCheckSum(FSM_REPLY_MASK | deviceAlias);
+		sendWrappedWithCheckSum( replyDataSize );
 
-	uint8_t index = 0; 
+		uint8_t index = 0; 
 
-	while (index < replyDataSize) {
-		sendWrappedWithCheckSum( dataBuffer[index++] );
+		while (index < replyDataSize) {
+			sendWrappedWithCheckSum( dataBuffer[index++] );
+		}
+
+		uartAddToTxBuffer(-checkSum);
+
+		uartSendTxBuffer();
 	}
-
-	uartAddToTxBuffer(-checkSum);
-
-	uartSendTxBuffer();
 }
 
 
