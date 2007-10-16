@@ -40,9 +40,10 @@
 
 #define ROBBUS_RX_BUFFER_MAX_SIZE 10
 
-#define ROBBUS_ADDR_BYTE_3 'K'
-#define ROBBUS_ADDR_BYTE_2 'R'
-#define ROBBUS_ADDR_BYTE_1 'T'
-#define ROBBUS_ADDR_BYTE_0 '1'
+#define ROBBUS_ADDR_BYTE_5 'K'
+#define ROBBUS_ADDR_BYTE_4 'R'
+#define ROBBUS_ADDR_BYTE_3 'E'
+#define ROBBUS_ADDR_BYTE_2 'T'
+#define ROBBUS_ADDR_BYTE_1 'E'
 
 #endif

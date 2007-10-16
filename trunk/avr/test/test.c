@@ -22,7 +22,7 @@ static void init(void)
 	uartInit();
 	uartSetBaudRate(115200);
 
-	fsmInit(messageHandler);
+	fsmInit('1', messageHandler);
 
 	DDRB = 0xff;
 	PORTB = 0xff;

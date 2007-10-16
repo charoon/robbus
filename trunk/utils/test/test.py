@@ -15,7 +15,6 @@ def sendWrapped(ser,c, sum):
 def sendMessage(ser,address,data):
 	sum = 0;
 	ser.write("\x02")     #write packet start
-	sum = sendWrapped(ser,"\x00",sum)
 	for c in address:
 		sum = sendWrapped(ser,c,sum) 
 	sum = sendWrapped(ser,chr(len(data)),sum)
@@ -23,7 +22,6 @@ def sendMessage(ser,address,data):
 		sum = sendWrapped(ser,c,sum)	
 	outSum = (256-(sum % 256)) % 256
 	sendWrapped(ser,chr(outSum),sum)
-	ser.write("\x03")     #write a string
 
 # read reply
 def readReply(ser):
@@ -31,8 +29,9 @@ def readReply(ser):
 	print "Consuming sent data..."
 	while True:
 		x = ser.read(1)
-		if x == "\x03":
-			break
+		print x, ord(x)
+		#if x == "\x03":
+		#	break
 	
 	# and read incomming
 	print "Receiving data..."
@@ -88,8 +87,8 @@ def main(argv = None):
 		address = argv[1][2:].decode("hex");
 	else:
 		address = argv[1];
-	if len(address) != 4:
-		print "Address must have 4 bytes"
+	if len(address) != 1:
+		print "Address must have 1 byte"
 		return
 	data = None;
 	if len(argv) > 2:
