@@ -8,7 +8,7 @@ Each vendor should have assigned its own vendor ID. If you wish to have one, ask
 
 || *MSB* || *LSB* || *ASCII* || *Author* ||
 || 0x4A || 0x42 || JB || [http://robotika.cz/wiki/JiriBezstarosti Jiri Bezstarosti] ||
-|| 0x4A || 0x52 || JR || Jaroslav Rybařík ||
+|| 0x4A || 0x52 || JR || [http://www.jaero.sk/elektro Jaroslav Rybárik] ||
 || 0x4B || 0x52 || KR || [http://robotika.cz/wiki/KamilRezac Kamil Rezac] ||
 || 0x50 || 0x4B || PK || [http://robotika.cz/wiki/PetrKubac Petr Kubac] ||
 || 0x53 || 0x42 || SB || http://www.siliconbrain.biz ||
