@@ -124,6 +124,9 @@ static void sendWrappedWithCheckSum(uint8_t data) {
 //! process incoming byte
 void fsmProcessByte(uint8_t data) {
 
+
+	PORTB=PORTB-1;
+
 	// alias assign packet
 	if (data == FSM_ALIAS_PACKET) {
 		fsmState = FSM_WAIT_FOR_SERVICE_ALIAS;
