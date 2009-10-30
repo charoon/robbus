@@ -4,25 +4,20 @@
 #include "global.h"		// include our global settings
 #include "timer.h"		// include timer function library (timing, PWM, etc)
 #include "uart.h"
-#include "fsm.h"
+#include "robbus.h"
 
-static uint8_t messageHandler(uint8_t *data, uint8_t dataSize) {
-	if (dataSize > 0) {
-		PORTB = ~data[0];
-		
-		data[0] = PINC;
-		return 1;
-	}
-	return 0;
+static uint8_t outData[1];
+
+static uint8_t* messageHandler(uint8_t *inData) {
+	PORTB = ~inData[0];
+	outData[0] = PINC;
+	return outData;
 }
 
 static void init(void)
 {
 	// initialize library units
-	uartInit();
-	uartSetBaudRate(115200);
-
-	fsmInit(ROBBUS_ADDR_BYTE_0, messageHandler);
+	Robbus_Init(messageHandler);
 
 	DDRB = 0xff;
 	PORTB = 0xfe;

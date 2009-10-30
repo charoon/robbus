@@ -27,54 +27,58 @@ def sendMessage(ser,alias,data,mask):
 	outSum = (256-(sum % 256)) % 256
 	sendWrapped(ser,chr(outSum),sum)
 
+def dewrap_read(ser):
+	x = ser.read(1)
+	if ord(x) == 0:
+		return chr(ord(ser.read(1))-4)
+	else:
+		return x
+
 # read reply
 def readReply(ser):
 	# consume outgoing message
+	s = ""
 	print "Consuming sent data..."
+	x = ser.read(1)
+	print x, ord(x)
 	while True:
 		x = ser.read(1)
 		print x, ord(x)
-		#if x == "\x03":
-		#	break
+		if len(x) == 0 or ( ord(x) > 0 and ord(x) < 4):
+			#print "break"
+			#s += x
+			break
 	
 	# and read incomming
 	print "Receiving data..."
-	s = ""
-	while True:
-		x = ser.read(1)
-		s += x
-		if x == "\x03":
-			break
-	print "Packet received..."
+	s += ser.read(1) # return adress, no need to dewrap
+	lenstr = dewrap_read(ser)
+	paylen = ord(lenstr);
+	s += lenstr
+	while paylen > 0:
+		s += dewrap_read(ser);
+		paylen = paylen-1
+	s += ser.read(1) #chsum
 	return s
 
-def dewrap(s):
-	out = ""
-	special = False
-	for c in s:
-		if special:
-			special = False
-			out += chr(ord(c) - 4)
-		elif ord(c) == 0:
-			special = True
-		else:
-			out += c
-	return out
-
 def parseReply(s):
-	s = s [1:-1] # cut start and stop
-	s = dewrap(s)
+	if len(s) < 2:
+		print "Input too short"
+		return
+	#s = s [1:-1] # cut start and stop
 	chSum = sum([ord(c) for c in s]) 
 	if sum([ord(c) for c in s]) % 256 != 0:
-		print "Invalid checksum"
-	address = s[1:5]
+		print "Invalid checksum", (chSum%256), (256-(chSum%256))
+		return -1
+	address = chr(ord(s[0]) - 128)
 	print "Reply from:", address, " hex:", address.encode("hex")
-	replySize = ord(s[5])
+	replySize = ord(s[1])
 	print "      size:", replySize
-	if replySize != len (s[6:-1]):
+	if replySize != len (s[2:-1]):
 		print "Data size doesn't match real data length"
-	data = s[6:-1]
+	data = s[2:-1]
 	print "      data:", [ord(i) for i in data], " hex:", data.encode("hex")
+	return 0
 
 
 def main(argv = None):
@@ -112,8 +116,9 @@ def main(argv = None):
 		mask = None
 	print "Sending..."
 	sendMessage(ser,address,data,mask)
-	parseReply(readReply(ser))
+	ret = parseReply(readReply(ser))
 	ser.close()
+	return ret
 
 if __name__ == "__main__":
 	from sys import argv
