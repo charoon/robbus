@@ -6,11 +6,13 @@
 #include "uart.h"
 #include "robbus.h"
 
-static uint8_t outData[1];
+static uint8_t outData[ROBBUS_OUTGOING_SIZE];
 
 static uint8_t* messageHandler(uint8_t *inData) {
-	PORTB = ~inData[0];
-	outData[0] = PINC;
+	uint8_t i;
+	//PORTB = ~inData[0];
+	//for (i = 0; i < ROBBUS_OUTGOING_SIZE; i++)
+	//	outData[i] = PINC;
 	return outData;
 }
 
