@@ -73,8 +73,7 @@ def parseReply(s):
 	s = s [1:] # cut head
 	chSum = sum([ord(c) for c in s]) 
 	if sum([ord(c) for c in s]) % 256 != 0:
-		print "Invalid checksum", (chSum%256), (256-(chSum%256))
-		return -1
+		raise CheckSumError('fuj');
 	address = chr(ord(s[0]) - 128)
 	print "Reply from:", address, " hex:", address.encode("hex")
 	replySize = ord(s[1])
@@ -87,43 +86,21 @@ def parseReply(s):
 
 
 def main(argv = None):
-	if len(argv) < 3:
-		print "Usage: test.py address data [mask]"
-		print "All address, data and mask are read as hexa values if"
-		print "prefixed with \\x (or \\\\x to avoid shell expansion)"
-		print "Example (bash): ./test.py KRT1 \\\\x0305"
+	if len(argv) < 2:
+		print "Usage: loadtest.py iterations"
 		return
-	
+	iters = int(argv[1])
+	print "Running", iters, "iterations"
 	ser = serial.Serial('/dev/robbus', 115200, timeout=1)
-	if argv[1][0:2] == "\\x":
-		print "Decoding hex address"
-		address = argv[1][2:].decode("hex");
-	else:
-		address = argv[1];
-	if len(address) != 1:
-		print "Address must have 1 byte"
-		return
-	if argv[2][0:2] == "\\x":
-		print "Decoding hex data", argv[2]
-		data = argv[2][2:].decode("hex");
-	else:
-		data = argv[2];
-	if len(argv) > 3:
-		if argv[3][0:2] == "\\x":
-			print "Decoding hex mask"
-			mask = argv[3][2:].decode("hex");
-		else:
-			mask = argv[3];
-		if len(mask) != 1:
-			print "Mask must have 1 byte"
-			return
-	else:
-		mask = None
-	print "Sending..."
-	sendMessage(ser,address,data,mask)
-	ret = parseReply(readReply(ser))
+	address = 'r';
+	for i in range(iters):
+		data = chr(i%256);
+		sendMessage(ser,address,data,None)
+		ret = parseReply(readReply(ser))
+		if (ret != 0):
+			return ret
 	ser.close()
-	return ret
+	return 0
 
 if __name__ == "__main__":
 	from sys import argv

@@ -159,13 +159,18 @@ void Robbus_Init(PtrFuncPtr_t cmdHandler) {
 	// register application command handler
 	commandHandler = cmdHandler;
 
+	// TODO: debug
+	DDRD |= _BV(PD6);
+
 	// enable interrupts
 	sei();
 }
 
 
 /// USART receive interrupt routine
-ISR(USART_RXC_vect) {
+//ISR(USART_RXC_vect) {
+void rxcBody(void) {
+
 	// read byte from USART register
 	uint8_t data = UDR;
 
@@ -286,6 +291,12 @@ ISR(USART_RXC_vect) {
 	}
 }
 
+
+ISR(USART_RXC_vect) {
+	PORTD |= _BV(PD6);
+	rxcBody();
+	PORTD &= ~_BV(PD6);
+}
 /// USART transmit data register empty interrupt routine
 ISR(USART_UDRE_vect) {
 	switch(getTxState()) {
@@ -307,8 +318,8 @@ ISR(USART_UDRE_vect) {
 				if (sendWrapped(usartBuffer[usartBufferIndex]))
 					usartBufferIndex++;
 			} else { // checksum
-				UDR = -checkSum;
-				changeTxState(TX_STATE_READY);
+				if (sendWrapped(-checkSum))
+					changeTxState(TX_STATE_READY);
 			}
 			break;
 		default:

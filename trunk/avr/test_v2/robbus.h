@@ -13,6 +13,8 @@
 
 #include <avr/io.h>
 
+#include "robbus_config.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
