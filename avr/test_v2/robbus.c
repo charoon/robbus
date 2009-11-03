@@ -10,6 +10,7 @@
 */
 
 #include <avr/io.h>
+#include <avr/eeprom.h>
 #include <avr/interrupt.h>
 
 #include <string.h>
@@ -24,6 +25,8 @@
 #define REGULAR_PACKET_HEAD 0x02
 #define GROUP_PACKET_HEAD 0x03
 
+#define SUBPACKET_ECHO 'e'
+#define SUBPACKET_CHANGE_ADDRESS 'a'
 // message processing machine state
  enum RxStateEnum  {
 	RX_STATE_READY = 0x01,
@@ -96,7 +99,7 @@ static volatile uint8_t receivedAddress;
 
 
 // data buffers
-#define ROBBUS_MIN_BUFFER_SIZE 3
+#define ROBBUS_MIN_BUFFER_SIZE 4
 #define RX_SIZE (ROBBUS_INCOMMING_SIZE>ROBBUS_MIN_BUFFER_SIZE?ROBBUS_INCOMMING_SIZE:ROBBUS_MIN_BUFFER_SIZE)
 #define TX_SIZE (ROBBUS_OUTGOING_SIZE)
 #define USART_BUFFER_SIZE (RX_SIZE>TX_SIZE?RX_SIZE:TX_SIZE)
@@ -106,7 +109,7 @@ static uint8_t usartBuffer[USART_BUFFER_SIZE];
 static uint8_t volatile usartBufferIndex;
 
 // forward declarations
-void doCommand(void);
+uint8_t doServiceCommand(void);
 
 #define checkSumInit() checkSum = 0
 #define checkSumAdd(data) checkSum += data;
@@ -149,9 +152,12 @@ void Robbus_Init(PtrFuncPtr_t cmdHandler) {
 
 	robbusFlags = 0;
 
-	// set device address
+	// set initial device address
 	deviceAddress = ROBBUS_INITIAL_ADDRESS;
-	// TODO: read address from eeprom
+	// read address from eeprom
+	if (eeprom_read_byte((uint8_t*)ROBBUS_EEPROM_DATA_ADDRESS) == 'R') {
+		deviceAddress = eeprom_read_byte((uint8_t*)(ROBBUS_EEPROM_DATA_ADDRESS+1)); 
+	}
 
 	// initialize buffer indices
 	usartBufferIndex = 0;
@@ -159,18 +165,13 @@ void Robbus_Init(PtrFuncPtr_t cmdHandler) {
 	// register application command handler
 	commandHandler = cmdHandler;
 
-	// TODO: debug
-	DDRD |= _BV(PD6);
-
 	// enable interrupts
 	sei();
 }
 
 
 /// USART receive interrupt routine
-//ISR(USART_RXC_vect) {
-void rxcBody(void) {
-
+ISR(USART_RXC_vect) {
 	// read byte from USART register
 	uint8_t data = UDR;
 
@@ -254,7 +255,12 @@ void rxcBody(void) {
 			if (((uint8_t)(data + checkSum)) == 0) {
 				// checksum ok, do action
 				if (getFlag(RX_FLAG_SERVICE_PACKET)) {
+					PORTB=0;
 					// process service packet
+					if(!doServiceCommand()) {
+						changeRxState(RX_STATE_READY);
+						return;
+					}
 				} else {
 					uint8_t i;
 					// process regular packet
@@ -291,12 +297,6 @@ void rxcBody(void) {
 	}
 }
 
-
-ISR(USART_RXC_vect) {
-	PORTD |= _BV(PD6);
-	rxcBody();
-	PORTD &= ~_BV(PD6);
-}
 /// USART transmit data register empty interrupt routine
 ISR(USART_UDRE_vect) {
 	switch(getTxState()) {
@@ -328,7 +328,23 @@ ISR(USART_UDRE_vect) {
 	}
 }
 
-void doServiceCommand(void) {
-	// TODO: implement
+uint8_t doServiceCommand(void) {
+	uint8_t newAddress;
+	switch (usartBuffer[0])
+	{
+		case SUBPACKET_ECHO:
+			return 1;
+		case SUBPACKET_CHANGE_ADDRESS:
+			newAddress = usartBuffer[1];
+			if (usartBuffer[2] != deviceAddress || usartBuffer[3] != (deviceAddress ^ newAddress))
+				return 0;
+			eeprom_write_byte((uint8_t*)(ROBBUS_EEPROM_DATA_ADDRESS+0), 'R'); 
+			eeprom_write_byte((uint8_t*)(ROBBUS_EEPROM_DATA_ADDRESS+1), newAddress); 
+			//deviceAddress = newAddress;	
+			payloadLength = 2;
+			return 1;
+		default:
+			return 0;
+	}
 }
 

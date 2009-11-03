@@ -10,9 +10,8 @@ static uint8_t outData[ROBBUS_OUTGOING_SIZE];
 
 static uint8_t* messageHandler(uint8_t *inData) {
 	uint8_t i;
-	//PORTB = ~inData[0];
-	//for (i = 0; i < ROBBUS_OUTGOING_SIZE; i++)
-	//	outData[i] = PINC;
+	PORTB = ~inData[0];
+	outData[0] = PINC;
 	return outData;
 }
 
