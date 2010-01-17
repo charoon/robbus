@@ -4,7 +4,7 @@ import serial
 import time
 
 def main(argv = None):
-	ser = serial.Serial('/dev/ttyUSB1', 115200, timeout=10)
+	ser = serial.Serial('/dev/ttyUSB1', 115200, timeout=30)
 	data = ser.read(254)
 	i = 0
 	while i < len(data):
