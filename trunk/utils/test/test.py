@@ -27,11 +27,14 @@ def sendMessage(ser,alias,data,mask):
 	x = ser.read(1)
 	print ">", x, ord(x)
 	sum = sendWrapped(ser,alias,sum) 
+	print sum
 	if mask is not None:
 		sum = sendWrapped(ser,mask,sum) 	
+		print sum
 	sum = sendWrapped(ser,chr(len(data)),sum)
 	for c in data:
 		sum = sendWrapped(ser,c,sum)	
+		print sum
 	outSum = (256-(sum % 256)) % 256
 	sendWrapped(ser,chr(outSum),sum)
 

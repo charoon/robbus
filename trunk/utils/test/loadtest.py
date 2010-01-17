@@ -87,12 +87,12 @@ def parseReply(s):
 
 def main(argv = None):
 	if len(argv) < 2:
-		print "Usage: loadtest.py iterations"
+		print "Usage: loadtest.py sddress iterations"
 		return
-	iters = int(argv[1])
+	iters = int(argv[2])
 	print "Running", iters, "iterations"
 	ser = serial.Serial('/dev/robbus', 115200, timeout=1)
-	address = 'r';
+	address = argv[1]
 	for i in range(iters):
 		data = chr(i%256);
 		sendMessage(ser,address,data,None)
