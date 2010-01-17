@@ -27,6 +27,7 @@
 
 #define SUBPACKET_ECHO 'e'
 #define SUBPACKET_CHANGE_ADDRESS 'a'
+#define SUBPACKET_DESCRIPTION 'd'
 // message processing machine state
  enum RxStateEnum  {
 	RX_STATE_READY = 0x01,
@@ -255,7 +256,6 @@ ISR(USART_RXC_vect) {
 			if (((uint8_t)(data + checkSum)) == 0) {
 				// checksum ok, do action
 				if (getFlag(RX_FLAG_SERVICE_PACKET)) {
-					PORTB=0;
 					// process service packet
 					if(!doServiceCommand()) {
 						changeRxState(RX_STATE_READY);
@@ -342,7 +342,12 @@ uint8_t doServiceCommand(void) {
 			eeprom_write_byte((uint8_t*)(ROBBUS_EEPROM_DATA_ADDRESS+1), newAddress); 
 			//deviceAddress = newAddress;	
 			payloadLength = 2;
-			return 1;
+ 			return 1;
+ 		case SUBPACKET_DESCRIPTION:
+ 			usartBuffer[0] = ROBBUS_INCOMMING_SIZE;
+ 			usartBuffer[1] = ROBBUS_OUTGOING_SIZE;
+ 			payloadLength = 2;
+ 			return 1;
 		default:
 			return 0;
 	}
