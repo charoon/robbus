@@ -2,5 +2,6 @@
 
  * [RobbusSpecification Basic Specification]
  * [PacketDescription Data Packet Structure]
+ * [ServicePacket Service Packet Types]
  * [ConnectorLayout Recommended Connector Layout]
  * [ReferenceProjects Reference Projects]
