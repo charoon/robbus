@@ -1,2 +1,6 @@
- * [RobbusSpecification Basic protocol specification]
- * [ConnectorLayout Recommended connector layout]
+#summary Data page for sidebar navigation
+
+ * [RobbusSpecification Basic Specification]
+ * [PacketDescription Data Packet Structure]
+ * [ConnectorLayout Recommended Connector Layout]
+ * [referenceProjects Reference Projects]
