@@ -1,0 +1,12 @@
+#summary Specification summary of the communication protocol
+#labels Featured
+
+= Basic Robbus Specification =
+
+*Characteristics:* serial protocol over CAN physical layer (i.e. MCP2551 bus driver)
+
+*Communication speed:* 115.2kbps
+
+*Max no of devices:* 124 (128) TODO verify
+
+*Max payload:* 120 bytes (guaranteed) TODO verify
