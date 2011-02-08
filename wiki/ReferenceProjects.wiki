@@ -1,3 +1,9 @@
 #summary List of projects using Robbus protocol
 
 = Reference projects =
+
+Besides the test code in project repository you can find Robbus protocol in following devices and projects:
+
+ * *[http://wiki.robotika.cz/RobotIrena Robot Irena]:* robotic car for contests: [http://www.vosrk.cz/roboorienteering/ RoboOrienteering] (1st place in 2010), [http://www.kufr.cz/view.php?cisloclanku=2010020002 Robotem Rovne], [http://robotika.cz/competitions/robotour/en Robotour], [http://www.sick.com/group/EN/home/pr/events/robot_day/Pages/Robot_day_2010.aspx SICK Robot Day]
+ * *[http://code.google.com/p/avrbikelight/ AVR Bike Light]:* complete bycicle light system
+ * *HiBeMaTo:* robot for [http://www.eurobot.cz/eurobot2010.php Eurobot Starter] Contest
