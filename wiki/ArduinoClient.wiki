@@ -17,7 +17,7 @@ Currently only devices with one serial are supported by packaged version. If you
 
 = Usage =
 
-Following code is commented example of minimum Robbus client implementation. You can use it as skeleton for your application.
+Following code is commented example of minimum Robbus client implementation. You can use it as skeleton for your application. This example uses approx 2500 bytes of program memory.
 
 {{{
 // include the definition (this is necessary to use Robbus)
