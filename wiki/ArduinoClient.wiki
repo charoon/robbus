@@ -1,4 +1,5 @@
 #summary Robbus client for Arduino platform.
+#labels Featured
 
 = Introduction =
 
