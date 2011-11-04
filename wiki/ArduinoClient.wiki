@@ -10,7 +10,7 @@ This is mostly full-featured (no runtime address change option yet) implementati
 Currently only devices with one serial are supported by packaged version. If you need to run on device with more serial ports, go to libraries/Robbus/Robbus.cpp and replace all occurences of Serial with SerialX (Serial1, Serial2,... - the port yuo want to link to Robbus).   
 
 = Installation instructions =
- * download the package
+ * download the package from [http://code.google.com/p/robbus/downloads/list download page]
  * unpack to <arduino install>/libraries
  * start Arduino gui
  * open the example or write your own code
