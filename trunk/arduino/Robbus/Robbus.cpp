@@ -1,7 +1,7 @@
 /*
-  Robbus.h - Library for Robbus communication protocol.
-  Created by Kamil Rezac, October 18, 2011.
-  Released into the public domain.
+	Robbus.h - Library for Robbus communication protocol.
+	Created by Kamil Rezac, October 18, 2011.
+	Released into the public domain.
 */
 
 #include "WProgram.h"
@@ -84,20 +84,21 @@ RobbusLib::RobbusLib()
 }
 
 // Public functions ////////////////////////////////////////////////////////////
-void RobbusLib::begin(byte address, byte inDataSize, byte outDataSize, byte* (*handler)(byte*))
+void RobbusLib::begin(RobbusCommWrapper* commWrapperPtr, byte address, byte inDataSize, byte outDataSize, byte* (*handler)(byte*))
 {		  
+	commWrapper = commWrapperPtr;
 	deviceAddress = address;
-  commandHandler = handler;
+	commandHandler = handler;
 	incomingDataSize = inDataSize;
 	outgoingDataSize = outDataSize;	
 
-  // TODO this is nasty but I haven't found a better way
+	// TODO this is nasty but I haven't found a better way
 	inDataSize = inDataSize > ROBBUS_MIN_BUFFER_SIZE ? inDataSize : ROBBUS_MIN_BUFFER_SIZE;	
 	usartBufferSize = inDataSize > outDataSize ? inDataSize:outDataSize; 
 	usartBuffer = (byte*) malloc(usartBufferSize * sizeof(byte)); 
 
-  Serial.begin(115200);
-  
+	commWrapper->begin();
+
 	// initialize state machine
 	robbusState = 0;
 
@@ -107,7 +108,7 @@ void RobbusLib::begin(byte address, byte inDataSize, byte outDataSize, byte* (*h
 
 void RobbusLib::process()
 {
-	if (!Serial.available()) {
+	if (!commWrapper->available()) {
 		// nothing to receive...
 		// if we have something to send, do it now
 
@@ -135,7 +136,6 @@ void RobbusLib::process()
 				}
 				break;
 			default:
-				Serial.write('e');
 				changeTxState(TX_STATE_READY);
 		}	
 		return;	
@@ -143,8 +143,8 @@ void RobbusLib::process()
 	
 
 	// some bytes in receive buffer, so process one
-	byte data = Serial.read();
-  
+	byte data = commWrapper->read();
+
 	// special characters handling
 	if (data == SERVICE_PACKET_HEAD) {                      // service packet
 		setFlag(RX_FLAG_SERVICE_PACKET);                // set flag
@@ -192,7 +192,7 @@ void RobbusLib::process()
 				changeRxState(RX_STATE_WAIT_FOR_LENGTH);
 			}
 			break;
-        
+
 		// regulsr sequence     
 		case RX_STATE_WAIT_FOR_ADDRESS:
 			if (data & ADDRESS_REPLY_MASK || data != deviceAddress) {
@@ -256,7 +256,7 @@ void RobbusLib::process()
 					clearFlag(RX_FLAG_SPECIAL_CHAR);
 					
 					// and push first byte into usart register
-					Serial.write(getFlag((RX_FLAG_SERVICE_PACKET) ? SERVICE_PACKET_HEAD : REGULAR_PACKET_HEAD));
+					commWrapper->write(getFlag((RX_FLAG_SERVICE_PACKET) ? SERVICE_PACKET_HEAD : REGULAR_PACKET_HEAD));
 				}
 			}
 			changeRxState(RX_STATE_READY);
@@ -266,44 +266,44 @@ void RobbusLib::process()
 			// should never happen ;-)
 			changeRxState(RX_STATE_READY);
 			break;
-	}  
+	}
 }
 
 // Private functions ///////////////////////////////////////////////////////////
 byte RobbusLib::doServiceCommand(void) {
-byte newAddress;
-switch (usartBuffer[0])
+	byte newAddress;
+	switch (usartBuffer[0])
 	{
-	  case SUBPACKET_DESCRIPTION:
-	    usartBuffer[0] = incomingDataSize;
-	    usartBuffer[1] = outgoingDataSize;
-	    payloadLength = 2;
-	    return 1;
-	  case SUBPACKET_ECHO:
-	    return 1;
-	  case SUBPACKET_CHANGE_ADDRESS:
-	    newAddress = usartBuffer[1];
-	    if (usartBuffer[2] != deviceAddress || usartBuffer[3] != (deviceAddress ^ newAddress))
-	    	return 0;
-	    // TODO FIXME, EEPROM not found -- EEPROM.write(ROBBUS_EEPROM_DATA_ADDRESS+0, 'R'); 
-	    // TODO FIXME, EEPROM not found -- EEPROM.write(ROBBUS_EEPROM_DATA_ADDRESS+1, newAddress); 
-	    payloadLength = 2;
-	    return 1;
-	  default:
-	    return 0;
+		case SUBPACKET_DESCRIPTION:
+			usartBuffer[0] = incomingDataSize;
+			usartBuffer[1] = outgoingDataSize;
+			payloadLength = 2;
+			return 1;
+		case SUBPACKET_ECHO:
+			return 1;
+		case SUBPACKET_CHANGE_ADDRESS:
+			newAddress = usartBuffer[1];
+			if (usartBuffer[2] != deviceAddress || usartBuffer[3] != (deviceAddress ^ newAddress))
+				return 0;
+			// TODO FIXME, EEPROM not found -- EEPROM.write(ROBBUS_EEPROM_DATA_ADDRESS+0, 'R'); 
+			// TODO FIXME, EEPROM not found -- EEPROM.write(ROBBUS_EEPROM_DATA_ADDRESS+1, newAddress); 
+			payloadLength = 2;
+			return 1;
+		default:
+			return 0;
 	}
 }
 
 byte RobbusLib::sendWrapped(byte c)
 {
 	if (c > SPECIAL_CHAR_MAX) {
-		Serial.write(c);
+		commWrapper->write(c);
 	} else {
 		if (getFlag(RX_FLAG_SPECIAL_CHAR)) {
-			Serial.write((byte)(c + SPECIAL_CHAR_SHIFT));
+			commWrapper->write((byte)(c + SPECIAL_CHAR_SHIFT));
 			clearFlag(RX_FLAG_SPECIAL_CHAR);
 		} else {
-			Serial.write((byte)SPECIAL_CHAR_PREFIX);
+			commWrapper->write((byte)SPECIAL_CHAR_PREFIX);
 			setFlag(RX_FLAG_SPECIAL_CHAR);
 			return 0;
 		}
@@ -314,5 +314,6 @@ byte RobbusLib::sendWrapped(byte c)
 
 // Preinstantiate Objects //////////////////////////////////////////////////////
 RobbusLib Robbus = RobbusLib();
+
 
 // END /////////////////////////////////////////////////////////////////////////
