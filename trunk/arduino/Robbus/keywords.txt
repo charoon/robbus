@@ -7,3 +7,6 @@ RobbusCommWrapper_Serial	KEYWORD1
 RobbusCommWrapper_Serial1	KEYWORD1
 RobbusCommWrapper_Serial2	KEYWORD1
 RobbusCommWrapper_Serial3	KEYWORD1
+RobbusCommWrapper_Serial4	KEYWORD1
+RobbusCommWrapper_Serial5	KEYWORD1
+RobbusCommWrapper_SerialUSB	KEYWORD1
