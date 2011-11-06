@@ -3,21 +3,20 @@
 
 = Introduction =
 
-This is mostly full-featured (no runtime address change option yet) implementation of Robbus protocol for 8-bit Arduino platform (32-bit may work as well but has not been tested yet).
+This is mostly full-featured (no runtime address change option yet) implementation of Robbus protocol for 8-bit Arduino platform. 32-bit platform (Maple) may work (compiles) as well but has not been tested yet.
 
 = Known limitations =
-
-Currently only devices with one serial are supported by packaged version. If you need to run on device with more serial ports, go to libraries/Robbus/Robbus.cpp and replace all occurences of Serial with SerialX (Serial1, Serial2,... - the port yuo want to link to Robbus).   
+No address change supported yet.
 
 = Installation instructions =
  * download the package from [http://code.google.com/p/robbus/downloads/list download page]
  * unpack to <arduino install>/libraries
- * start Arduino gui
- * open the example or write your own code
+ * start Arduino IDE (or Maple IDE)
+ * open the example Robbus/RobbusTest or write your own code
 
 = Usage =
 
-Following code is commented example of minimum Robbus client implementation. You can use it as skeleton for your application. This example uses approx 2500 bytes of program memory.
+Following code is commented example of minimum Robbus client implementation. You can use it as skeleton for your application. This example uses approx 2800 bytes of program memory on AVR or 17kB on ARM.
 
 {{{
 // include the definition (this is necessary to use Robbus)
@@ -40,13 +39,32 @@ byte* robbusHandler(byte* data)
 
 void setup()
 {
+  // instatiate communication wrapper (specify which way to communicate)
+  // you can use one of the predefined: RobbusCommWrapper_Serial,
+  // RobbusCommWrapper_Serial1, RobbusCommWrapper_Serial2...
+  // or define your own (i.e. for ethernet shield). The code will look like:
+  // class RobbusCommWrapper_MyOwn : public RobbusCommWrapper
+  // {
+  //   public:
+  //     RobbusCommWrapper_MyOwn() { MyCommLayer myCommLayer = MyCommLayer(); }
+  //     virtual void begin() { myCommLayer.initialize(115200); }
+  //     virtual int available() { return myCommLayer.areDataReady(); }
+  //     virtual int read() { return myCommLayer.getData(); }
+  //     virtual void write(uint8_t data) { myCommLayer.sendData(data); }
+  //   private:
+  //     MyCommLayer myCommLayer;
+  //}; 
+  // for Maple IDE use RobbusCommWrapper_SerialX where X=(1, 2, 3, USB) instead (Serial w/o suffix is not supported)
+  RobbusCommWrapper_Serial RobbusOnSerial = RobbusCommWrapper_Serial();
+
   // initialize and start Robbus client code
   // the parameters are:
+  // * pointer to communication wrapper
   // * node address (value between 4 and 127)
   // * incoming data length
   // * outgoing data length
   // * pointer to handler function
-  Robbus.begin('a', 1, 2, robbusHandler);  
+  Robbus.begin(&RobbusOnSerial, 'a', 1, 2, robbusHandler);  
 }
 
 void loop()
