@@ -3,6 +3,7 @@
 	Created by Kamil Rezac, October 18, 2011.
 	Released into the public domain.
 */
+#include <stdlib.h>
 
 #include "WProgram.h"
 #include "Robbus.h"
