@@ -18,7 +18,7 @@ byte* robbusHandler(byte* data)
 
 void setup()
 {
-	// instatiate communication wrapper (specify which way to communicate
+	// instatiate communication wrapper (specify which way to communicate)
 	// you can use one of the predefined: RobbusCommWrapper_Serial,
 	// RobbusCommWrapper_Serial1, RobbusCommWrapper_Serial2...
 	// or define your own (i.e. for ethernet shield). The code will look like:
