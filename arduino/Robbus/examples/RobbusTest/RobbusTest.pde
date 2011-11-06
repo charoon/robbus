@@ -18,13 +18,31 @@ byte* robbusHandler(byte* data)
 
 void setup()
 {
+  // instatiate communication wrapper (specify which way to communicate
+  // you can use one of the predefined: RobbusCommWrapper_Serial,
+  // RobbusCommWrapper_Serial1, RobbusCommWrapper_Serial2...
+  // or define your own (i.e. for ethernet shield). The code will look like:
+  // class RobbusCommWrapper_MyOwn : public RobbusCommWrapper
+  // {
+  //   public:
+  //     RobbusCommWrapper_MyOwn() { MyCommLayer myCommLayer = MyCommLayer(); }
+  //     virtual void begin() { myCommLayer.initialize(115200); }
+  //     virtual int available() { return myCommLayer.areDataReady(); }
+  //     virtual int read() { return myCommLayer.getData(); }
+  //     virtual void write(uint8_t data) { myCommLayer.sendData(data); }
+  //   private:
+  //     MyCommLayer myCommLayer;
+  //};  
+  RobbusCommWrapper_Serial RobbusOnSerial = RobbusCommWrapper_Serial();
+  
   // initialize and start Robbus client code
   // the parameters are:
+  // * pointer to communication wrapper
   // * node address (value between 4 and 127)
   // * incoming data length
   // * outgoing data length
   // * pointer to handler function
-  Robbus.begin('a', 1, 2, robbusHandler);  
+  Robbus.begin(&RobbusOnSerial, 'a', 1, 2, robbusHandler);  
 }
 
 void loop()
