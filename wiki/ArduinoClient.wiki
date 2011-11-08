@@ -3,7 +3,7 @@
 
 = Introduction =
 
-This is mostly full-featured (no runtime address change option yet) implementation of Robbus protocol for 8-bit Arduino platform. 32-bit platform (Maple) may work (compiles) as well but has not been tested yet.
+This is mostly full-featured (no runtime address change option yet) implementation of Robbus protocol for 8-bit and 32bit Arduino platform. 
 
 = Known limitations =
 No address change supported yet.
