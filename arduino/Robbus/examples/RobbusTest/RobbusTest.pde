@@ -5,6 +5,24 @@
 // the length must match the output data length
 byte outData[2];      
 
+// instatiate communication wrapper (specify which way to communicate)
+// you can use one of the predefined: RobbusCommWrapper_Serial,
+// RobbusCommWrapper_Serial1, RobbusCommWrapper_Serial2...
+// or define your own (i.e. for ethernet shield). The code will look like:
+// class RobbusCommWrapper_MyOwn : public RobbusCommWrapper
+// {
+//   public:
+//     RobbusCommWrapper_MyOwn() { MyCommLayer myCommLayer = MyCommLayer(); }
+//     virtual void begin() { myCommLayer.initialize(115200); }
+//     virtual int available() { return myCommLayer.areDataReady(); }
+//     virtual int read() { return myCommLayer.getData(); }
+//     virtual void write(uint8_t data) { myCommLayer.sendData(data); }
+//   private:
+//     MyCommLayer myCommLayer;
+//}; 
+// for Maple IDE use RobbusCommWrapper_SerialX where X=(1, 2, 3, USB) instead (Serial w/o suffix is not supported)
+RobbusCommWrapper_Serial RobbusOnSerial = RobbusCommWrapper_Serial();
+
 // message handler 
 // it will be called on reception of Robbus message
 // the parameter is pointer to received data (the length will match incoming data length)
@@ -18,24 +36,6 @@ byte* robbusHandler(byte* data)
 
 void setup()
 {
-	// instatiate communication wrapper (specify which way to communicate)
-	// you can use one of the predefined: RobbusCommWrapper_Serial,
-	// RobbusCommWrapper_Serial1, RobbusCommWrapper_Serial2...
-	// or define your own (i.e. for ethernet shield). The code will look like:
-	// class RobbusCommWrapper_MyOwn : public RobbusCommWrapper
-	// {
-	//   public:
-	//     RobbusCommWrapper_MyOwn() { MyCommLayer myCommLayer = MyCommLayer(); }
-	//     virtual void begin() { myCommLayer.initialize(115200); }
-	//     virtual int available() { return myCommLayer.areDataReady(); }
-	//     virtual int read() { return myCommLayer.getData(); }
-	//     virtual void write(uint8_t data) { myCommLayer.sendData(data); }
-	//   private:
-	//     MyCommLayer myCommLayer;
-	//}; 
-	// for Maple IDE use RobbusCommWrapper_SerialX where X=(1, 2, 3, USB) instead (Serial w/o suffix is not supported)
-	RobbusCommWrapper_Serial RobbusOnSerial = RobbusCommWrapper_Serial();
-
 	// initialize and start Robbus client code
 	// the parameters are:
 	// * pointer to communication wrapper
